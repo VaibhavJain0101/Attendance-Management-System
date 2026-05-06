@@ -200,7 +200,11 @@ const AdminDashboardPage = () => {
         <StatCard title="Employees" value={stats.employees} icon={UserCheck2} tone="emerald" />
         <StatCard title="Managers" value={stats.managers} icon={ShieldCheck} tone="amber" />
       </div>
-
+       
+       <PageHeader
+        title="User Management"
+        description="Create users and monitor active accounts."
+      />
       <Card>
         <CardHeader>
           <CardTitle>Create User</CardTitle>
