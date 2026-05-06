@@ -10,9 +10,11 @@ import {
   listAttendanceWithoutPagination
 } from '../repositories/attendance.repository.js';
 import { emitNotificationToUsers } from '../realtime/socket.js';
+import { emitNotificationToManagersAndAdmins } from '../realtime/socket.js';
 import { ApiError } from '../utils/ApiError.js';
 import { getDateKey, hoursBetween } from '../utils/date.js';
 import { resolveScopedUserIds } from './scope.service.js';
+import { validateAttendanceGeo } from './attendanceValidation.service.js';
 
 const toEvent = (payload) => ({
   time: payload.time ? new Date(payload.time) : new Date(),
@@ -28,30 +30,73 @@ const updateWorkingStatus = (attendance) => {
   attendance.workingStatus = effectiveHours >= SHIFT_HOURS ? WORKING_STATUS.COMPLETED : WORKING_STATUS.INCOMPLETE;
 };
 
-export const markPunchIn = async (userId, payload) => {
-  const event = toEvent(payload);
-  const dateKey = getDateKey(event.time);
-
-  const existing = await findAttendanceByUserDate(userId, dateKey);
-  if (existing) {
-    throw new ApiError(StatusCodes.CONFLICT, 'Punch-in already recorded for today');
+const maybeNotifyGeoViolation = async (userId, geofenceResult) => {
+  if (!geofenceResult?.isSuspicious) {
+    return;
   }
 
-  return createAttendance({
-    user: userId,
-    dateKey,
-    punchIn: event,
-    workingStatus: WORKING_STATUS.PENDING
+  await emitNotificationToManagersAndAdmins({
+    type: 'GEOFENCE_VIOLATION',
+    title: 'Geofence Policy Alert',
+    message: `Attendance location anomaly detected for user ${userId}. ${geofenceResult.reason}`,
+    metadata: {
+      userId,
+      decision: geofenceResult.decision,
+      geoStatus: geofenceResult.geoStatus,
+      distanceFromOffice: geofenceResult.distanceFromOffice,
+      officeLocationId: geofenceResult.office?._id?.toString() || null
+    }
   });
 };
 
-export const markPunchOut = async (userId, payload) => {
+export const markPunchIn = async (actor, payload, clientInfo = {}) => {
+  const event = toEvent(payload);
+  const dateKey = getDateKey(event.time);
+
+  const existing = await findAttendanceByUserDate(actor.id, dateKey);
+  if (existing) {
+    throw new ApiError(StatusCodes.CONFLICT, 'Punch-in already recorded for today');
+  }
+  const geofenceResult = await validateAttendanceGeo({ actor, payload });
+
+  const data = await createAttendance({
+    user: actor.id,
+    dateKey,
+    punchIn: event,
+    workingStatus: WORKING_STATUS.PENDING,
+    geofence: {
+      officeLocation: geofenceResult.office?._id || null,
+      officeLatitude: geofenceResult.office?.latitude ?? null,
+      officeLongitude: geofenceResult.office?.longitude ?? null,
+      distanceFromOffice: geofenceResult.distanceFromOffice,
+      geoStatus: geofenceResult.geoStatus,
+      decision: geofenceResult.decision,
+      isSuspicious: geofenceResult.isSuspicious,
+      gpsAccuracy: payload?.gpsAccuracy ?? null
+    },
+    geoMeta: {
+      checkInLatitude: payload.location.latitude,
+      checkInLongitude: payload.location.longitude
+    },
+    clientInfo: {
+      deviceInfo: payload.deviceFingerprint || clientInfo.deviceInfo || '',
+      browserInfo: clientInfo.browserInfo || '',
+      ipAddress: clientInfo.ipAddress || ''
+    }
+  });
+
+  await maybeNotifyGeoViolation(actor.id, geofenceResult);
+  return data;
+};
+
+export const markPunchOut = async (actor, payload, clientInfo = {}) => {
   const event = toEvent(payload);
 
-  const attendance = await Attendance.findOne({ user: userId, punchOut: null }).sort({ createdAt: -1 });
+  const attendance = await Attendance.findOne({ user: actor.id, punchOut: null }).sort({ createdAt: -1 });
   if (!attendance) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'No active punch-in found for punch-out');
   }
+  const geofenceResult = await validateAttendanceGeo({ actor, payload, attendanceId: attendance._id });
 
   if (event.time < attendance.punchIn.time) {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Punch-out time cannot be before punch-in time');
@@ -59,10 +104,32 @@ export const markPunchOut = async (userId, payload) => {
 
   attendance.punchOut = event;
   attendance.totalWorkingHours = hoursBetween(attendance.punchIn.time, event.time);
+  attendance.geofence = {
+    officeLocation: geofenceResult.office?._id || attendance.geofence?.officeLocation || null,
+    officeLatitude: geofenceResult.office?.latitude ?? attendance.geofence?.officeLatitude ?? null,
+    officeLongitude: geofenceResult.office?.longitude ?? attendance.geofence?.officeLongitude ?? null,
+    distanceFromOffice: geofenceResult.distanceFromOffice,
+    geoStatus: geofenceResult.geoStatus,
+    decision: geofenceResult.decision,
+    isSuspicious: Boolean(attendance.geofence?.isSuspicious || geofenceResult.isSuspicious),
+    gpsAccuracy: payload?.gpsAccuracy ?? attendance.geofence?.gpsAccuracy ?? null
+  };
+  attendance.geoMeta = {
+    checkInLatitude: attendance.geoMeta?.checkInLatitude ?? null,
+    checkInLongitude: attendance.geoMeta?.checkInLongitude ?? null,
+    checkOutLatitude: payload.location.latitude,
+    checkOutLongitude: payload.location.longitude
+  };
+  attendance.clientInfo = {
+    deviceInfo: payload.deviceFingerprint || clientInfo.deviceInfo || attendance.clientInfo?.deviceInfo || '',
+    browserInfo: clientInfo.browserInfo || attendance.clientInfo?.browserInfo || '',
+    ipAddress: clientInfo.ipAddress || attendance.clientInfo?.ipAddress || ''
+  };
   updateWorkingStatus(attendance);
 
   await attendance.save();
   const validated = await findAttendanceById(attendance._id);
+  await maybeNotifyGeoViolation(actor.id, geofenceResult);
 
   emitNotificationToUsers([validated.user._id.toString()], {
     type: 'ATTENDANCE_VALIDATED',

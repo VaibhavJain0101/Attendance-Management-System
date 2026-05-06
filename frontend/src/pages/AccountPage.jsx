@@ -1,5 +1,10 @@
 import { useState } from 'react';
 import { useChangePasswordMutation } from '../features/auth/authApi';
+import PageHeader from '../components/ui/page-header';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { FormRow, Label, FieldMessage } from '../components/ui/form';
+import { Input } from '../components/ui/input';
 
 const defaultForm = {
   currentPassword: '',
@@ -34,45 +39,55 @@ const AccountPage = () => {
 
   return (
     <div className="stack">
-      <h2>Account Settings</h2>
-      <section className="card">
-        <h3>Change Password</h3>
-        <form className="form-grid" onSubmit={handleSubmit}>
-          <label htmlFor="currentPassword">Current Password</label>
-          <input
-            id="currentPassword"
-            type="password"
-            value={form.currentPassword}
-            onChange={(event) => setForm((prev) => ({ ...prev, currentPassword: event.target.value }))}
-            required
-          />
+      <PageHeader title="Account Settings" description="Update your account credentials securely." />
+      <Card>
+        <CardHeader>
+          <CardTitle>Change Password</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form className="form-grid" onSubmit={handleSubmit}>
+            <FormRow>
+              <Label htmlFor="currentPassword">Current Password</Label>
+              <Input
+                id="currentPassword"
+                type="password"
+                value={form.currentPassword}
+                onChange={(event) => setForm((prev) => ({ ...prev, currentPassword: event.target.value }))}
+                required
+              />
+            </FormRow>
 
-          <label htmlFor="newPassword">New Password</label>
-          <input
-            id="newPassword"
-            type="password"
-            value={form.newPassword}
-            onChange={(event) => setForm((prev) => ({ ...prev, newPassword: event.target.value }))}
-            required
-          />
+            <FormRow>
+              <Label htmlFor="newPassword">New Password</Label>
+              <Input
+                id="newPassword"
+                type="password"
+                value={form.newPassword}
+                onChange={(event) => setForm((prev) => ({ ...prev, newPassword: event.target.value }))}
+                required
+              />
+            </FormRow>
 
-          <label htmlFor="confirmPassword">Confirm New Password</label>
-          <input
-            id="confirmPassword"
-            type="password"
-            value={form.confirmPassword}
-            onChange={(event) => setForm((prev) => ({ ...prev, confirmPassword: event.target.value }))}
-            required
-          />
+            <FormRow>
+              <Label htmlFor="confirmPassword">Confirm New Password</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={form.confirmPassword}
+                onChange={(event) => setForm((prev) => ({ ...prev, confirmPassword: event.target.value }))}
+                required
+              />
+            </FormRow>
 
-          {error ? <p className="error-text">{error}</p> : null}
-          {message ? <p className="success-text">{message}</p> : null}
+            {error ? <FieldMessage tone="error">{error}</FieldMessage> : null}
+            {message ? <FieldMessage tone="success">{message}</FieldMessage> : null}
 
-          <button type="submit" disabled={changePasswordState.isLoading}>
-            {changePasswordState.isLoading ? 'Updating...' : 'Update Password'}
-          </button>
-        </form>
-      </section>
+            <Button type="submit" disabled={changePasswordState.isLoading}>
+              {changePasswordState.isLoading ? 'Updating...' : 'Update Password'}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 };

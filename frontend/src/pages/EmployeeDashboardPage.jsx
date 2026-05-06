@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { CalendarCheck2, CircleAlert, Clock3 } from 'lucide-react';
 import StatCard from '../components/common/StatCard';
 import Loading from '../components/common/Loading';
 import ErrorMessage from '../components/common/ErrorMessage';
@@ -6,6 +7,8 @@ import AttendanceTable from '../components/common/AttendanceTable';
 import OvertimeTable from '../components/common/OvertimeTable';
 import { useGetAttendanceQuery } from '../features/attendance/attendanceApi';
 import { useGetOvertimeQuery } from '../features/overtime/overtimeApi';
+import PageHeader from '../components/ui/page-header';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 
 const EmployeeDashboardPage = () => {
   const attendanceQuery = useGetAttendanceQuery({ page: 1, limit: 10 });
@@ -29,22 +32,34 @@ const EmployeeDashboardPage = () => {
 
   return (
     <div className="stack">
-      <h2>Employee Dashboard</h2>
+      <PageHeader
+        title="Employee Dashboard"
+        description="Track attendance progress, working hours, and overtime activity in one place."
+      />
+
       <div className="stats-grid">
-        <StatCard title="Completed Days" value={stats.completed} />
-        <StatCard title="Incomplete Days" value={stats.incomplete} />
-        <StatCard title="Total Logged Hours" value={stats.totalHours.toFixed(2)} />
+        <StatCard title="Completed Days" value={stats.completed} icon={CalendarCheck2} tone="emerald" />
+        <StatCard title="Incomplete Days" value={stats.incomplete} icon={CircleAlert} tone="amber" />
+        <StatCard title="Total Logged Hours" value={stats.totalHours.toFixed(2)} subtitle="This period" icon={Clock3} tone="blue" />
       </div>
 
-      <section className="card">
-        <h3>Recent Attendance</h3>
-        <AttendanceTable rows={attendanceQuery.data?.data || []} />
-      </section>
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Attendance</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <AttendanceTable rows={attendanceQuery.data?.data || []} />
+        </CardContent>
+      </Card>
 
-      <section className="card">
-        <h3>Overtime Requests</h3>
-        <OvertimeTable rows={overtimeQuery.data?.data || []} />
-      </section>
+      <Card>
+        <CardHeader>
+          <CardTitle>Overtime Requests</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <OvertimeTable rows={overtimeQuery.data?.data || []} />
+        </CardContent>
+      </Card>
     </div>
   );
 };

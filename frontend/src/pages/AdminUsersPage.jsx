@@ -1,8 +1,24 @@
 import { useState } from 'react';
+import { Users } from 'lucide-react';
 import StatCard from '../components/common/StatCard';
 import Loading from '../components/common/Loading';
 import ErrorMessage from '../components/common/ErrorMessage';
 import { useCreateUserMutation, useGetUsersQuery } from '../features/users/usersApi';
+import PageHeader from '../components/ui/page-header';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { FormRow, Label, FieldMessage } from '../components/ui/form';
+import { Input } from '../components/ui/input';
+import { Select } from '../components/ui/select';
+import {
+  Table,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableHeaderCell,
+  TableRow
+} from '../components/ui/table';
+import { Badge } from '../components/ui/badge';
 
 const AdminUsersPage = () => {
   const [page, setPage] = useState(1);
@@ -34,64 +50,85 @@ const AdminUsersPage = () => {
 
   return (
     <div className="stack">
-      <h2>User Management</h2>
+      <PageHeader title="User Management" description="Create users and monitor active accounts." />
+
       <div className="stats-grid">
-        <StatCard title="Total Users" value={usersQuery.data?.meta?.total || users.length} />
+        <StatCard title="Total Users" value={usersQuery.data?.meta?.total || users.length} icon={Users} tone="blue" />
       </div>
 
-      <section className="card">
-        <h3>Create User</h3>
-        <form className="form-grid" onSubmit={handleSubmit}>
-          <label>Name</label>
-          <input value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} required />
-          <label>Email</label>
-          <input
-            type="email"
-            value={form.email}
-            onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
-            required
-          />
-          <label>Password</label>
-          <input
-            type="password"
-            value={form.password}
-            onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
-            required
-          />
-          <label>Role</label>
-          <select value={form.role} onChange={(e) => setForm((p) => ({ ...p, role: e.target.value }))}>
-            <option value="employee">employee</option>
-            <option value="manager">manager</option>
-            <option value="admin">admin</option>
-          </select>
-          {error ? <p className="error-text">{error}</p> : null}
-          {message ? <p className="success-text">{message}</p> : null}
-          <button type="submit" disabled={createUserState.isLoading}>
-            {createUserState.isLoading ? 'Creating...' : 'Create User'}
-          </button>
-        </form>
-      </section>
+      <Card>
+        <CardHeader>
+          <CardTitle>Create User</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form className="form-grid" onSubmit={handleSubmit}>
+            <FormRow>
+              <Label>Name</Label>
+              <Input value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} required />
+            </FormRow>
 
-      <section className="card">
-        <h3>User List</h3>
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th></tr>
-            </thead>
-            <tbody>
-              {users.map((u) => (
-                <tr key={u._id}><td>{u.name}</td><td>{u.email}</td><td>{u.role}</td><td>{u.isActive ? 'Active' : 'Inactive'}</td></tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="pagination">
-          <button type="button" disabled={page === 1} onClick={() => setPage((p) => p - 1)}>Previous</button>
-          <span>Page {page}</span>
-          <button type="button" onClick={() => setPage((p) => p + 1)}>Next</button>
-        </div>
-      </section>
+            <FormRow>
+              <Label>Email</Label>
+              <Input
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
+                required
+              />
+            </FormRow>
+
+            <FormRow>
+              <Label>Password</Label>
+              <Input
+                type="password"
+                value={form.password}
+                onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
+                required
+              />
+            </FormRow>
+
+            <FormRow>
+              <Label>Role</Label>
+              <Select value={form.role} onChange={(e) => setForm((p) => ({ ...p, role: e.target.value }))}>
+                <option value="employee">employee</option>
+                <option value="manager">manager</option>
+                <option value="admin">admin</option>
+              </Select>
+            </FormRow>
+
+            {error ? <FieldMessage tone="error">{error}</FieldMessage> : null}
+            {message ? <FieldMessage tone="success">{message}</FieldMessage> : null}
+            <Button type="submit" disabled={createUserState.isLoading}>
+              {createUserState.isLoading ? 'Creating...' : 'Create User'}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>User List</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <TableContainer>
+            <Table className="min-w-[640px]">
+              <TableHead>
+                <tr><TableHeaderCell>Name</TableHeaderCell><TableHeaderCell>Email</TableHeaderCell><TableHeaderCell>Role</TableHeaderCell><TableHeaderCell>Status</TableHeaderCell></tr>
+              </TableHead>
+              <tbody>
+                {users.map((u) => (
+                  <TableRow key={u._id}><TableCell>{u.name}</TableCell><TableCell>{u.email}</TableCell><TableCell>{u.role}</TableCell><TableCell><Badge variant={u.isActive ? 'default' : 'danger'}>{u.isActive ? 'Active' : 'Inactive'}</Badge></TableCell></TableRow>
+                ))}
+              </tbody>
+            </Table>
+          </TableContainer>
+          <div className="pagination">
+            <Button type="button" variant="secondary" size="sm" disabled={page === 1} onClick={() => setPage((p) => p - 1)}>Previous</Button>
+            <span>Page {page}</span>
+            <Button type="button" variant="secondary" size="sm" onClick={() => setPage((p) => p + 1)}>Next</Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

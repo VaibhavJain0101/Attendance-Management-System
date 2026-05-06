@@ -34,6 +34,16 @@ const userSchema = new mongoose.Schema(
       ref: 'User',
       default: null
     },
+    assignedOffice: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'OfficeLocation',
+      default: null
+    },
+    workFromHomeBypass: {
+      enabled: { type: Boolean, default: false },
+      expiresAt: { type: Date, default: null },
+      reason: { type: String, default: '' }
+    },
     isActive: {
       type: Boolean,
       default: true

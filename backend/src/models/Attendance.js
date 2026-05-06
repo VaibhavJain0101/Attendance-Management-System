@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { OVERTIME_STATUS, VALIDATION_STATUS, WORKING_STATUS } from '../constants/attendance.js';
+import { GEO_STATUS } from '../constants/geofence.js';
 
 const locationSchema = new mongoose.Schema(
   {
@@ -82,6 +83,35 @@ const attendanceSchema = new mongoose.Schema(
     validation: {
       type: validationSchema,
       default: () => ({})
+    },
+    geofence: {
+      officeLocation: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'OfficeLocation',
+        default: null
+      },
+      officeLatitude: { type: Number, default: null },
+      officeLongitude: { type: Number, default: null },
+      distanceFromOffice: { type: Number, default: null },
+      geoStatus: {
+        type: String,
+        enum: Object.values(GEO_STATUS),
+        default: GEO_STATUS.OUTSIDE
+      },
+      decision: { type: String, default: '' },
+      isSuspicious: { type: Boolean, default: false },
+      gpsAccuracy: { type: Number, default: null }
+    },
+    geoMeta: {
+      checkInLatitude: { type: Number, default: null },
+      checkInLongitude: { type: Number, default: null },
+      checkOutLatitude: { type: Number, default: null },
+      checkOutLongitude: { type: Number, default: null }
+    },
+    clientInfo: {
+      deviceInfo: { type: String, default: '' },
+      browserInfo: { type: String, default: '' },
+      ipAddress: { type: String, default: '' }
     }
   },
   {

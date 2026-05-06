@@ -1,5 +1,6 @@
 import { StatusCodes } from 'http-status-codes';
 import { ROLES } from '../constants/roles.js';
+import { OfficeLocation } from '../models/OfficeLocation.js';
 import { User } from '../models/User.js';
 import { createUser, findUserByEmail, findUserById, findUsers, updateUserById } from '../repositories/user.repository.js';
 import { ApiError } from '../utils/ApiError.js';
@@ -35,6 +36,21 @@ const resolveManagerId = async (role, managerId) => {
   return managerId;
 };
 
+const resolveAssignedOfficeId = async (assignedOfficeId) => {
+  if (!assignedOfficeId) {
+    return null;
+  }
+
+  ensureValidObjectId(assignedOfficeId, 'assignedOfficeId');
+
+  const office = await OfficeLocation.findById(assignedOfficeId).select('_id isActive');
+  if (!office || !office.isActive) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'assignedOfficeId must reference an active office location');
+  }
+
+  return assignedOfficeId;
+};
+
 export const createUserByAdmin = async (payload) => {
   const existing = await findUserByEmail(payload.email);
   if (existing) {
@@ -48,10 +64,14 @@ export const createUserByAdmin = async (payload) => {
     email: payload.email,
     password: payload.password,
     role: payload.role,
-    manager
+    manager,
+    assignedOffice: await resolveAssignedOfficeId(payload.assignedOfficeId || null)
   });
 
-  const created = await User.findById(user._id).select('-password').populate('manager', 'name email role');
+  const created = await User.findById(user._id)
+    .select('-password')
+    .populate('manager', 'name email role')
+    .populate('assignedOffice', 'officeName latitude longitude radiusInMeters');
   return created;
 };
 
@@ -86,6 +106,31 @@ export const updateUserByAdmin = async (actorId, userId, payload) => {
     const targetManagerId =
       payload.managerId !== undefined ? payload.managerId || null : user.manager ? user.manager.toString() : null;
     updateData.manager = await resolveManagerId(targetRole, targetManagerId);
+  }
+
+  if (payload.assignedOfficeId !== undefined) {
+    updateData.assignedOffice = await resolveAssignedOfficeId(payload.assignedOfficeId || null);
+  }
+
+  if (
+    payload.workFromHomeBypassEnabled !== undefined ||
+    payload.workFromHomeBypassExpiresAt !== undefined ||
+    payload.workFromHomeBypassReason !== undefined
+  ) {
+    updateData.workFromHomeBypass = {
+      enabled:
+        payload.workFromHomeBypassEnabled !== undefined
+          ? payload.workFromHomeBypassEnabled
+          : user.workFromHomeBypass?.enabled || false,
+      expiresAt:
+        payload.workFromHomeBypassExpiresAt !== undefined
+          ? payload.workFromHomeBypassExpiresAt
+          : user.workFromHomeBypass?.expiresAt || null,
+      reason:
+        payload.workFromHomeBypassReason !== undefined
+          ? payload.workFromHomeBypassReason
+          : user.workFromHomeBypass?.reason || ''
+    };
   }
 
   const updated = await updateUserById(userId, updateData);

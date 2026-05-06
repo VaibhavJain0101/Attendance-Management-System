@@ -29,6 +29,7 @@ export const findUsers = ({ role, managerId, page = 1, limit = 10 }) => {
     User.find(filter)
       .select('-password')
       .populate('manager', 'name email role')
+      .populate('assignedOffice', 'officeName latitude longitude radiusInMeters')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit),
@@ -42,4 +43,5 @@ export const updateUserById = (id, payload) =>
     runValidators: true
   })
     .select('-password')
-    .populate('manager', 'name email role');
+    .populate('manager', 'name email role')
+    .populate('assignedOffice', 'officeName latitude longitude radiusInMeters');

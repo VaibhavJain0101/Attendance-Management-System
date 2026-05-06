@@ -12,6 +12,7 @@ import AttendancePage from './pages/AttendancePage';
 import ReportsPage from './pages/ReportsPage';
 import AccountPage from './pages/AccountPage';
 import AdminUsersPage from './pages/AdminUsersPage';
+import GeofenceAdminPage from './pages/GeofenceAdminPage';
 import { ROLES } from './utils/constants';
 
 const App = () => (
@@ -37,6 +38,7 @@ const App = () => (
         <Route element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]} />}>
           <Route path="/admin" element={<AdminDashboardPage />} />
           <Route path="/admin/users" element={<AdminUsersPage />} />
+          <Route path="/admin/geofence" element={<GeofenceAdminPage />} />
         </Route>
       </Route>
     </Route>

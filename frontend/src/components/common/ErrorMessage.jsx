@@ -1,7 +1,14 @@
+import { AlertTriangle } from 'lucide-react';
+import { Card } from '../ui/card';
+
 const ErrorMessage = ({ message }) => (
-  <div className="card error">
-    <strong>Error:</strong> {message || 'Something went wrong'}
-  </div>
+  <Card className="error flex items-start gap-3">
+    <AlertTriangle size={18} className="mt-0.5 text-rose-600" />
+    <div>
+      <strong className="text-rose-700">Error:</strong>{' '}
+      <span className="text-rose-700">{message || 'Something went wrong'}</span>
+    </div>
+  </Card>
 );
 
 export default ErrorMessage;

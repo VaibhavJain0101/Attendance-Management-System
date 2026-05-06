@@ -5,11 +5,12 @@ import {
   markPunchOut,
   validateAttendance
 } from '../services/attendance.service.js';
+import { extractRequestClientInfo } from '../services/attendanceValidation.service.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { successResponse } from '../utils/response.js';
 
 export const punchInController = asyncHandler(async (req, res) => {
-  const data = await markPunchIn(req.user.id, req.body);
+  const data = await markPunchIn(req.user, req.body, extractRequestClientInfo(req));
 
   return successResponse(res, {
     statusCode: StatusCodes.CREATED,
@@ -19,7 +20,7 @@ export const punchInController = asyncHandler(async (req, res) => {
 });
 
 export const punchOutController = asyncHandler(async (req, res) => {
-  const data = await markPunchOut(req.user.id, req.body);
+  const data = await markPunchOut(req.user, req.body, extractRequestClientInfo(req));
 
   return successResponse(res, {
     statusCode: StatusCodes.OK,

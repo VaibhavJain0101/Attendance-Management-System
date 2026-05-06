@@ -1,80 +1,117 @@
+import { MapPin, UserRoundCheck } from 'lucide-react';
 import { formatDateTime, formatHours } from '../../utils/formatters';
+import { Badge } from '../ui/badge';
+import { Button } from '../ui/button';
+import {
+  Table,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableHeaderCell,
+  TableRow
+} from '../ui/table';
+import { Card } from '../ui/card';
+
+const getStatusVariant = (value) => {
+  const status = String(value || '').toUpperCase();
+  if (status.includes('COMPLETE') || status.includes('VALID')) return 'default';
+  if (status.includes('PENDING')) return 'info';
+  if (status.includes('INCOMPLETE')) return 'warning';
+  if (status.includes('INVALID')) return 'danger';
+  return 'neutral';
+};
 
 const AttendanceTable = ({ rows = [], canValidate = false, onValidate, validatingId }) => {
   if (!rows.length) {
-    return <div className="card">No attendance records found.</div>;
+    return (
+      <Card>
+        <p className="small">No attendance records found.</p>
+      </Card>
+    );
   }
 
   return (
-    <div className="table-wrap">
-      <table>
-        <thead>
+    <TableContainer>
+      <Table>
+        <TableHead>
           <tr>
-            <th>Name</th>
-            <th>Date</th>
-            <th>Punch In</th>
-            <th>Punch Out</th>
-            <th>Hours</th>
-            <th>Status</th>
-            <th>Validation</th>
-            <th>Selfie</th>
-            <th>Location</th>
-            {canValidate ? <th>Actions</th> : null}
+            <TableHeaderCell>Name</TableHeaderCell>
+            <TableHeaderCell>Date</TableHeaderCell>
+            <TableHeaderCell>Punch In</TableHeaderCell>
+            <TableHeaderCell>Punch Out</TableHeaderCell>
+            <TableHeaderCell>Hours</TableHeaderCell>
+            <TableHeaderCell>Status</TableHeaderCell>
+            <TableHeaderCell>Validation</TableHeaderCell>
+            <TableHeaderCell>Selfie</TableHeaderCell>
+            <TableHeaderCell>Location</TableHeaderCell>
+            {canValidate ? <TableHeaderCell>Actions</TableHeaderCell> : null}
           </tr>
-        </thead>
+        </TableHead>
         <tbody>
           {rows.map((row) => (
-            <tr key={row._id}>
-              <td>{row.user?.name || '-'}</td>
-              <td>{row.dateKey}</td>
-              <td>{formatDateTime(row.punchIn?.time)}</td>
-              <td>{formatDateTime(row.punchOut?.time)}</td>
-              <td>{formatHours(row.totalWorkingHours)}</td>
-              <td>{row.workingStatus}</td>
-              <td>
-                {row.validation?.status}
-                {row.validation?.remarks ? <div className="small">{row.validation.remarks}</div> : null}
-              </td>
-              <td>
+            <TableRow key={row._id}>
+              <TableCell>{row.user?.name || '-'}</TableCell>
+              <TableCell>{row.dateKey}</TableCell>
+              <TableCell>{formatDateTime(row.punchIn?.time)}</TableCell>
+              <TableCell>{formatDateTime(row.punchOut?.time)}</TableCell>
+              <TableCell>{formatHours(row.totalWorkingHours)}</TableCell>
+              <TableCell>
+                <Badge variant={getStatusVariant(row.workingStatus)}>{row.workingStatus || '-'}</Badge>
+              </TableCell>
+              <TableCell>
+                <div className="space-y-1">
+                  <Badge variant={getStatusVariant(row.validation?.status)}>{row.validation?.status || '-'}</Badge>
+                  {row.validation?.remarks ? <div className="small">{row.validation.remarks}</div> : null}
+                </div>
+              </TableCell>
+              <TableCell>
                 {row.punchIn?.selfie ? (
-                  <a href={row.punchIn.selfie} target="_blank" rel="noreferrer">
+                  <a href={row.punchIn.selfie} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm font-semibold text-emerald-700 hover:text-emerald-600">
+                    <UserRoundCheck size={14} />
                     View
                   </a>
                 ) : (
                   '-'
                 )}
-              </td>
-              <td>
-                {row.punchIn?.location
-                  ? `${row.punchIn.location.latitude}, ${row.punchIn.location.longitude}`
-                  : '-'}
-              </td>
+              </TableCell>
+              <TableCell>
+                {row.punchIn?.location ? (
+                  <span className="inline-flex items-start gap-1 text-sm">
+                    <MapPin size={14} className="mt-0.5 text-slate-400" />
+                    {`${row.punchIn.location.latitude}, ${row.punchIn.location.longitude}`}
+                  </span>
+                ) : (
+                  '-'
+                )}
+              </TableCell>
               {canValidate ? (
-                <td>
+                <TableCell>
                   <div className="inline-actions">
-                    <button
+                    <Button
                       type="button"
+                      size="sm"
                       disabled={validatingId === row._id}
                       onClick={() => onValidate(row._id, 'VALID')}
                     >
                       Valid
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
-                      className="danger"
+                      size="sm"
+                      variant="danger"
                       disabled={validatingId === row._id}
                       onClick={() => onValidate(row._id, 'INVALID')}
                     >
                       Invalid
-                    </button>
+                    </Button>
                   </div>
-                </td>
+                </TableCell>
               ) : null}
-            </tr>
+            </TableRow>
           ))}
         </tbody>
-      </table>
-    </div>
+      </Table>
+    </TableContainer>
   );
 };
 

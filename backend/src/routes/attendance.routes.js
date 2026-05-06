@@ -22,6 +22,8 @@ router.use(authenticate);
 
 router.post('/punch-in', authorize(ROLES.EMPLOYEE), validate(punchInSchema), punchInController);
 router.post('/punch-out', authorize(ROLES.EMPLOYEE), validate(punchOutSchema), punchOutController);
+router.post('/checkin', authorize(ROLES.EMPLOYEE), validate(punchInSchema), punchInController);
+router.post('/checkout', authorize(ROLES.EMPLOYEE), validate(punchOutSchema), punchOutController);
 router.get('/', validate(attendanceQuerySchema, 'query'), getAttendanceController);
 router.patch(
   '/:attendanceId/validate',

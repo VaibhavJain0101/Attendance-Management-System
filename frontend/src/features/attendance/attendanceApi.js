@@ -4,7 +4,7 @@ export const attendanceApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     punchIn: builder.mutation({
       query: (payload) => ({
-        url: '/attendance/punch-in',
+        url: '/attendance/checkin',
         method: 'POST',
         body: payload
       }),
@@ -12,7 +12,7 @@ export const attendanceApi = apiSlice.injectEndpoints({
     }),
     punchOut: builder.mutation({
       query: (payload) => ({
-        url: '/attendance/punch-out',
+        url: '/attendance/checkout',
         method: 'POST',
         body: payload
       }),

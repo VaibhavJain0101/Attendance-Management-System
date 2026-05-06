@@ -6,6 +6,9 @@ const eventSchema = Joi.object({
     latitude: Joi.number().min(-90).max(90).required(),
     longitude: Joi.number().min(-180).max(180).required()
   }).required(),
+  gpsAccuracy: Joi.number().min(0).max(10000).optional(),
+  deviceFingerprint: Joi.string().max(500).allow('').optional(),
+  isMockedLocation: Joi.boolean().optional(),
   time: Joi.date().optional()
 });
 

@@ -6,6 +6,7 @@ import notificationRoutes from './notification.routes.js';
 import overtimeRoutes from './overtime.routes.js';
 import reportRoutes from './report.routes.js';
 import userRoutes from './user.routes.js';
+import geofenceRoutes from './geofence.routes.js';
 
 const router = Router();
 
@@ -20,5 +21,6 @@ router.use('/notifications', notificationRoutes);
 router.use('/overtime', overtimeRoutes);
 router.use('/reports', reportRoutes);
 router.use('/users', userRoutes);
+router.use('/geofence', geofenceRoutes);
 
 export default router;

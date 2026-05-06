@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { CircleAlert, ClipboardCheck, FileClock } from 'lucide-react';
 import StatCard from '../components/common/StatCard';
 import Loading from '../components/common/Loading';
 import ErrorMessage from '../components/common/ErrorMessage';
@@ -6,6 +7,9 @@ import AttendanceTable from '../components/common/AttendanceTable';
 import OvertimeTable from '../components/common/OvertimeTable';
 import { useGetAttendanceQuery, useValidateAttendanceMutation } from '../features/attendance/attendanceApi';
 import { useGetOvertimeQuery, useReviewOvertimeMutation } from '../features/overtime/overtimeApi';
+import PageHeader from '../components/ui/page-header';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Button } from '../components/ui/button';
 
 const ManagerDashboardPage = () => {
   const [attendancePage, setAttendancePage] = useState(1);
@@ -63,50 +67,62 @@ const ManagerDashboardPage = () => {
 
   return (
     <div className="stack">
-      <h2>Manager Dashboard</h2>
+      <PageHeader
+        title="Manager Dashboard"
+        description="Review team attendance, validate records, and handle overtime approvals."
+      />
+
       <div className="stats-grid">
-        <StatCard title="Team Records" value={stats.teamRecords} />
-        <StatCard title="Pending Overtime" value={stats.pendingOvertime} />
-        <StatCard title="Invalid Marked" value={stats.invalidMarked} />
+        <StatCard title="Team Records" value={stats.teamRecords} icon={ClipboardCheck} tone="emerald" />
+        <StatCard title="Pending Overtime" value={stats.pendingOvertime} icon={FileClock} tone="amber" />
+        <StatCard title="Invalid Marked" value={stats.invalidMarked} icon={CircleAlert} tone="rose" />
       </div>
 
-      <section className="card">
-        <h3>Team Attendance</h3>
-        <AttendanceTable
-          rows={attendanceQuery.data?.data || []}
-          canValidate
-          onValidate={handleValidate}
-          validatingId={validatingId}
-        />
-        <div className="pagination">
-          <button type="button" disabled={attendancePage === 1} onClick={() => setAttendancePage((p) => p - 1)}>
-            Previous
-          </button>
-          <span>Page {attendancePage}</span>
-          <button type="button" onClick={() => setAttendancePage((p) => p + 1)}>
-            Next
-          </button>
-        </div>
-      </section>
+      <Card>
+        <CardHeader>
+          <CardTitle>Team Attendance</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <AttendanceTable
+            rows={attendanceQuery.data?.data || []}
+            canValidate
+            onValidate={handleValidate}
+            validatingId={validatingId}
+          />
+          <div className="pagination">
+            <Button type="button" variant="secondary" size="sm" disabled={attendancePage === 1} onClick={() => setAttendancePage((p) => p - 1)}>
+              Previous
+            </Button>
+            <span>Page {attendancePage}</span>
+            <Button type="button" variant="secondary" size="sm" onClick={() => setAttendancePage((p) => p + 1)}>
+              Next
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
-      <section className="card">
-        <h3>Team Overtime Requests</h3>
-        <OvertimeTable
-          rows={overtimeQuery.data?.data || []}
-          canReview
-          onReview={handleReview}
-          reviewingId={reviewingId}
-        />
-        <div className="pagination">
-          <button type="button" disabled={overtimePage === 1} onClick={() => setOvertimePage((p) => p - 1)}>
-            Previous
-          </button>
-          <span>Page {overtimePage}</span>
-          <button type="button" onClick={() => setOvertimePage((p) => p + 1)}>
-            Next
-          </button>
-        </div>
-      </section>
+      <Card>
+        <CardHeader>
+          <CardTitle>Team Overtime Requests</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <OvertimeTable
+            rows={overtimeQuery.data?.data || []}
+            canReview
+            onReview={handleReview}
+            reviewingId={reviewingId}
+          />
+          <div className="pagination">
+            <Button type="button" variant="secondary" size="sm" disabled={overtimePage === 1} onClick={() => setOvertimePage((p) => p - 1)}>
+              Previous
+            </Button>
+            <span>Page {overtimePage}</span>
+            <Button type="button" variant="secondary" size="sm" onClick={() => setOvertimePage((p) => p + 1)}>
+              Next
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
