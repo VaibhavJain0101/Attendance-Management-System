@@ -13,7 +13,6 @@ Complete Attendance Management System with JWT auth, RBAC, attendance capture, o
 ```bash
 cd backend
 npm install
-cp .env.example .env
 npm run dev
 ```
 
@@ -21,14 +20,11 @@ npm run dev
 ```bash
 cd frontend
 npm install
-cp .env.example .env
+
 npm run dev
 ```
 
-## Default Local URLs
 
-- Backend API: `http://localhost:5000/api/v1`
-- Frontend App: `http://localhost:5173`
 
 ## Core Capabilities
 
@@ -68,7 +64,7 @@ Frontend follows feature-based modular architecture:
 ## API Docs
 
 Detailed backend endpoint documentation:
-- [API Endpoints](D:\Attadance management system\backend\src\docs\api-endpoints.md)
+
 
 ## Detailed Module Docs
 
