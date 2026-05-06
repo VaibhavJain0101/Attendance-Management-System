@@ -27,6 +27,7 @@ import {
   TableRow
 } from '../components/ui/table';
 import { Badge } from '../components/ui/badge';
+import { extractApiErrorMessage } from '../utils/apiError';
 
 const defaultCreateForm = {
   name: '',
@@ -100,7 +101,7 @@ const AdminDashboardPage = () => {
       setCreateMessage('User created successfully.');
       setCreateForm(defaultCreateForm);
     } catch (error) {
-      setCreateError(error?.data?.message || 'Failed to create user.');
+      setCreateError(extractApiErrorMessage(error, 'Failed to create user.'));
     }
   };
 
@@ -146,7 +147,7 @@ const AdminDashboardPage = () => {
       }).unwrap();
       setUpdateMessage('User updated successfully.');
     } catch (error) {
-      setUpdateError(error?.data?.message || 'Failed to update user.');
+      setUpdateError(extractApiErrorMessage(error, 'Failed to update user.'));
     }
   };
 
@@ -176,7 +177,7 @@ const AdminDashboardPage = () => {
       setResetMessage('Password reset successfully.');
       setResetForm({ userId: '', newPassword: '', confirmPassword: '' });
     } catch (error) {
-      setResetError(error?.data?.message || 'Failed to reset password.');
+      setResetError(extractApiErrorMessage(error, 'Failed to reset password.'));
     }
   };
 
@@ -251,9 +252,9 @@ const AdminDashboardPage = () => {
                 value={createForm.role}
                 onChange={(event) => setCreateForm((prev) => ({ ...prev, role: event.target.value, managerId: '' }))}
               >
-                <option value="EMPLOYEE">Employee</option>
-                <option value="MANAGER">Manager</option>
-                <option value="ADMIN">Admin</option>
+                <option value="employee">Employee</option>
+                <option value="manager">Manager</option>
+                <option value="admin">Admin</option>
               </Select>
             </FormRow>
 
@@ -326,9 +327,9 @@ const AdminDashboardPage = () => {
                 value={updateForm.role}
                 onChange={(event) => setUpdateForm((prev) => ({ ...prev, role: event.target.value, managerId: '' }))}
               >
-                <option value="EMPLOYEE">Employee</option>
-                <option value="MANAGER">Manager</option>
-                <option value="ADMIN">Admin</option>
+                <option value="employee">Employee</option>
+                <option value="manager">Manager</option>
+                <option value="admin">Admin</option>
               </Select>
             </FormRow>
 

@@ -40,7 +40,8 @@ export const findUsers = ({ role, managerId, page = 1, limit = 10 }) => {
 export const updateUserById = (id, payload) =>
   User.findByIdAndUpdate(id, payload, {
     new: true,
-    runValidators: true
+    runValidators: true,
+    context: 'query'
   })
     .select('-password')
     .populate('manager', 'name email role')

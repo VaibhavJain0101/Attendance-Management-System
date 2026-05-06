@@ -6,6 +6,8 @@ import { createUser, findUserByEmail, findUserById, findUsers, updateUserById } 
 import { ApiError } from '../utils/ApiError.js';
 import { ensureValidObjectId } from './scope.service.js';
 
+const normalizeRole = (role) => String(role || '').trim().toLowerCase();
+
 export const getUsers = async (query) => {
   const [users, total] = await findUsers(query);
 
@@ -52,20 +54,27 @@ const resolveAssignedOfficeId = async (assignedOfficeId) => {
 };
 
 export const createUserByAdmin = async (payload) => {
-  const existing = await findUserByEmail(payload.email);
+  const normalizedPayload = {
+    ...payload,
+    name: payload.name?.trim(),
+    email: payload.email?.trim().toLowerCase(),
+    role: normalizeRole(payload.role)
+  };
+
+  const existing = await findUserByEmail(normalizedPayload.email);
   if (existing) {
     throw new ApiError(StatusCodes.CONFLICT, 'Email is already registered');
   }
 
-  const manager = await resolveManagerId(payload.role, payload.managerId || null);
+  const manager = await resolveManagerId(normalizedPayload.role, normalizedPayload.managerId || null);
 
   const user = await createUser({
-    name: payload.name,
-    email: payload.email,
-    password: payload.password,
-    role: payload.role,
+    name: normalizedPayload.name,
+    email: normalizedPayload.email,
+    password: normalizedPayload.password,
+    role: normalizedPayload.role,
     manager,
-    assignedOffice: await resolveAssignedOfficeId(payload.assignedOfficeId || null)
+    assignedOffice: await resolveAssignedOfficeId(normalizedPayload.assignedOfficeId || null)
   });
 
   const created = await User.findById(user._id)
@@ -90,11 +99,11 @@ export const updateUserByAdmin = async (actorId, userId, payload) => {
   const updateData = {};
 
   if (payload.name !== undefined) {
-    updateData.name = payload.name;
+    updateData.name = payload.name?.trim();
   }
 
   if (payload.role !== undefined) {
-    updateData.role = payload.role;
+    updateData.role = normalizeRole(payload.role);
   }
 
   if (payload.isActive !== undefined) {
@@ -102,7 +111,7 @@ export const updateUserByAdmin = async (actorId, userId, payload) => {
   }
 
   if (payload.managerId !== undefined || payload.role !== undefined) {
-    const targetRole = payload.role || user.role;
+    const targetRole = payload.role !== undefined ? normalizeRole(payload.role) : user.role;
     const targetManagerId =
       payload.managerId !== undefined ? payload.managerId || null : user.manager ? user.manager.toString() : null;
     updateData.manager = await resolveManagerId(targetRole, targetManagerId);
