@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import {
+  getAttendanceSelfiePreviewController,
   getAttendanceController,
   punchInController,
   punchOutController,
@@ -10,7 +11,9 @@ import { authorize } from '../middlewares/rbac.middleware.js';
 import { validate } from '../middlewares/validate.middleware.js';
 import { ROLES } from '../constants/roles.js';
 import {
+  attendanceIdParamSchema,
   attendanceQuerySchema,
+  attendanceSelfiePreviewQuerySchema,
   attendanceValidationSchema,
   punchInSchema,
   punchOutSchema
@@ -25,9 +28,17 @@ router.post('/punch-out', authorize(ROLES.EMPLOYEE), validate(punchOutSchema), p
 router.post('/checkin', authorize(ROLES.EMPLOYEE), validate(punchInSchema), punchInController);
 router.post('/checkout', authorize(ROLES.EMPLOYEE), validate(punchOutSchema), punchOutController);
 router.get('/', validate(attendanceQuerySchema, 'query'), getAttendanceController);
+router.get(
+  '/:attendanceId/selfie-preview',
+  authorize(ROLES.EMPLOYEE, ROLES.MANAGER, ROLES.ADMIN),
+  validate(attendanceIdParamSchema, 'params'),
+  validate(attendanceSelfiePreviewQuerySchema, 'query'),
+  getAttendanceSelfiePreviewController
+);
 router.patch(
   '/:attendanceId/validate',
   authorize(ROLES.MANAGER, ROLES.ADMIN),
+  validate(attendanceIdParamSchema, 'params'),
   validate(attendanceValidationSchema),
   validateAttendanceController
 );

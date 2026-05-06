@@ -25,6 +25,12 @@ export const attendanceApi = apiSlice.injectEndpoints({
       }),
       providesTags: ['Attendance']
     }),
+    getAttendanceSelfiePreview: builder.query({
+      query: ({ attendanceId, event = 'punchIn' }) => ({
+        url: `/attendance/${attendanceId}/selfie-preview`,
+        params: { event }
+      })
+    }),
     validateAttendance: builder.mutation({
       query: ({ attendanceId, body }) => ({
         url: `/attendance/${attendanceId}/validate`,
@@ -40,5 +46,6 @@ export const {
   usePunchInMutation,
   usePunchOutMutation,
   useGetAttendanceQuery,
+  useLazyGetAttendanceSelfiePreviewQuery,
   useValidateAttendanceMutation
 } = attendanceApi;

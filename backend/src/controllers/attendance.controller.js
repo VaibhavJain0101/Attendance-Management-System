@@ -1,5 +1,6 @@
 import { StatusCodes } from 'http-status-codes';
 import {
+  getAttendanceSelfiePreview,
   getAttendanceList,
   markPunchIn,
   markPunchOut,
@@ -50,6 +51,20 @@ export const validateAttendanceController = asyncHandler(async (req, res) => {
   return successResponse(res, {
     statusCode: StatusCodes.OK,
     message: 'Attendance validation updated successfully',
+    data
+  });
+});
+
+export const getAttendanceSelfiePreviewController = asyncHandler(async (req, res) => {
+  const data = await getAttendanceSelfiePreview(
+    req.user,
+    req.params.attendanceId,
+    req.query.event || 'punchIn'
+  );
+
+  return successResponse(res, {
+    statusCode: StatusCodes.OK,
+    message: 'Attendance selfie preview URL fetched successfully',
     data
   });
 });

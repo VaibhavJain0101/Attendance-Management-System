@@ -87,14 +87,58 @@ const buildCsv = (rows) => {
   return csvLines.join('\n');
 };
 
-const buildXlsxBuffer = (rows) => {
+/*const buildXlsxBuffer = (rows) => {
   const exportRows = toExportRows(rows);
   const worksheet = XLSX.utils.json_to_sheet(exportRows);
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, 'DailyReport');
   return XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
 };
+*/
+const buildXlsxBuffer = (rows) => {
+  const exportRows = toExportRows(rows).map((row) => ({
+    ...row,
 
+    PunchInSelfie: row.PunchInSelfie
+      ? 'Available'
+      : '-',
+
+    PunchOutSelfie: row.PunchOutSelfie
+      ? 'Available'
+      : '-',
+  }));
+
+  const worksheet =
+    XLSX.utils.json_to_sheet(exportRows);
+
+  const workbook = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(
+    workbook,
+    worksheet,
+    'DailyReport'
+  );
+
+  return XLSX.write(workbook, {
+    type: 'buffer',
+    bookType: 'xlsx',
+  });
+};
+
+  /*const workbook = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(
+    workbook,
+    worksheet,
+    'DailyReport'
+  );
+
+  return XLSX.write(workbook, {
+    type: 'buffer',
+    bookType: 'xlsx',
+  });
+};
+*/
 const buildPdfBuffer = async (rows) => {
   const exportRows = toExportRows(rows);
   const document = new PDFDocument({ margin: 30, size: 'A4' });
@@ -122,8 +166,17 @@ const buildPdfBuffer = async (rows) => {
       );
       document.text(`Location(In): ${row.PunchInLatitude}, ${row.PunchInLongitude}`);
       document.text(`Location(Out): ${row.PunchOutLatitude}, ${row.PunchOutLongitude}`);
-      document.text(`Selfie(In): ${String(row.PunchInSelfie).slice(0, 80)}...`);
-      document.text(`Selfie(Out): ${String(row.PunchOutSelfie).slice(0, 80)}...`);
+document.text(
+  `Selfie(In): ${
+    row.PunchInSelfie ? 'Attached/Available' : '-'
+  }`
+);
+
+document.text(
+  `Selfie(Out): ${
+    row.PunchOutSelfie ? 'Attached/Available' : '-'
+  }`
+);
       document.moveDown();
 
       if (document.y > 720) {

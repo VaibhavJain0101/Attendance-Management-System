@@ -28,3 +28,11 @@ export const attendanceValidationSchema = Joi.object({
   status: Joi.string().valid('VALID', 'INVALID').required(),
   remarks: Joi.string().max(500).allow('').default('')
 });
+
+export const attendanceSelfiePreviewQuerySchema = Joi.object({
+  event: Joi.string().valid('punchIn', 'punchOut').default('punchIn')
+});
+
+export const attendanceIdParamSchema = Joi.object({
+  attendanceId: Joi.string().length(24).required()
+});

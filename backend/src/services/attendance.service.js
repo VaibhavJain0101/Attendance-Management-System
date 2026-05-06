@@ -218,3 +218,95 @@ export const validateAttendance = async (actor, attendanceId, payload) => {
   await attendance.save();
   return findAttendanceById(attendance._id);
 };
+
+const getSignedUrlExpiry = (rawUrl) => {
+  try {
+    const parsed = new URL(rawUrl);
+    const params = parsed.searchParams;
+
+    const amzDate = params.get('X-Amz-Date');
+    const amzExpires = params.get('X-Amz-Expires');
+    if (amzDate && amzExpires) {
+      const yyyy = Number(amzDate.slice(0, 4));
+      const mm = Number(amzDate.slice(4, 6)) - 1;
+      const dd = Number(amzDate.slice(6, 8));
+      const hh = Number(amzDate.slice(9, 11));
+      const min = Number(amzDate.slice(11, 13));
+      const ss = Number(amzDate.slice(13, 15));
+      const start = Date.UTC(yyyy, mm, dd, hh, min, ss);
+      const expiresAt = new Date(start + Number(amzExpires) * 1000);
+      if (!Number.isNaN(expiresAt.getTime())) {
+        return expiresAt;
+      }
+    }
+
+    const unixExpiry = params.get('Expires');
+    if (unixExpiry && /^\d+$/.test(unixExpiry)) {
+      const asNumber = Number(unixExpiry);
+      const ms = asNumber > 9999999999 ? asNumber : asNumber * 1000;
+      const expiresAt = new Date(ms);
+      if (!Number.isNaN(expiresAt.getTime())) {
+        return expiresAt;
+      }
+    }
+
+    const azureExpiry = params.get('se');
+    if (azureExpiry) {
+      const expiresAt = new Date(azureExpiry);
+      if (!Number.isNaN(expiresAt.getTime())) {
+        return expiresAt;
+      }
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+const canActorAccessAttendance = (actor, attendance) => {
+  const attendanceUserId = attendance.user?._id?.toString?.() || attendance.user?.toString?.() || null;
+
+  if (actor.role === ROLES.ADMIN) return true;
+  if (actor.role === ROLES.EMPLOYEE) return attendanceUserId === actor.id;
+
+  if (actor.role === ROLES.MANAGER) {
+    const managerId = attendance.user?.manager ? attendance.user.manager.toString() : null;
+    return attendanceUserId === actor.id || managerId === actor.id;
+  }
+
+  return false;
+};
+
+export const getAttendanceSelfiePreview = async (actor, attendanceId, eventType = 'punchIn') => {
+  if (!['punchIn', 'punchOut'].includes(eventType)) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'event must be either punchIn or punchOut');
+  }
+
+  const attendance = await findAttendanceById(attendanceId);
+  if (!attendance) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Attendance record not found');
+  }
+
+  if (!canActorAccessAttendance(actor, attendance)) {
+    throw new ApiError(StatusCodes.FORBIDDEN, 'You are not authorized to preview this selfie');
+  }
+
+  const selfie = attendance?.[eventType]?.selfie || '';
+  if (!selfie) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Selfie not available for this attendance event');
+  }
+
+  const isDataUrl = /^data:image\//i.test(selfie);
+  const isHttpUrl = /^https?:\/\//i.test(selfie);
+  const expiresAt = isHttpUrl ? getSignedUrlExpiry(selfie) : null;
+
+  return {
+    url: selfie,
+    eventType,
+    isDataUrl,
+    isHttpUrl,
+    expiresAt: expiresAt ? expiresAt.toISOString() : null,
+    isExpired: expiresAt ? expiresAt.getTime() <= Date.now() : false
+  };
+};
