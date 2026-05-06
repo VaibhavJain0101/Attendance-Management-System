@@ -38,7 +38,7 @@ backend/
       socket.js
     docs/
       api-endpoints.md
-  .env.example
+  .env
   package.json
 ```
 
@@ -52,12 +52,12 @@ The structure follows a clean layered approach:
 
 ## 3. Environment Variables
 
-Create `backend/.env` from `.env.example`:
+Create `backend/.env`:
 
 ```env
 NODE_ENV=development
 PORT=5000
-MONGODB_URI=mongodb://127.0.0.1:27017/attendance_management
+MONGODB_URI=mongodb://<mongoDBurl>/attendance_management
 JWT_SECRET=replace_with_long_random_secret
 JWT_EXPIRES_IN=7d
 CORS_ORIGIN=http://localhost:5173
@@ -141,16 +141,7 @@ JWT flow:
   - `logs/combined.log`
   - `logs/error.log`
 
-## 9. API Documentation
 
-Full endpoints and payloads are available in:
-- `src/docs/api-endpoints.md`
-
-User management highlights:
-- `GET /users` (admin list)
-- `POST /users` (admin create employee/manager/admin)
-- `PATCH /users/:userId` (admin update role/manager/status)
-- `PATCH /users/:userId/reset-password` (admin reset user password)
 
 Auth highlights:
 - `POST /auth/login`
