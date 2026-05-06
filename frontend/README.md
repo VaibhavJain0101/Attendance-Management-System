@@ -26,11 +26,11 @@ http://localhost:5173
 
 ## Environment
 
-Create `frontend/.env` from `.env.example`:
+Create `frontend/.env` :
 
 ```env
 VITE_API_BASE_URL=http://localhost:5000/api/v1
-```
+GOOGLE_MAP_API: ......```
 
 ## Features Implemented
 
